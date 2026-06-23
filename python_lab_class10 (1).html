@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Python Lab – Class 10</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ── Variables ── */
+:root{
+  --bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;--border:#2e3350;
+  --accent:#7c6af7;--accent2:#56d4a0;--text:#e4e6f0;--text2:#8b91b0;
+  --error:#f87171;--warn:#fbbf24;--success:#56d4a0;
+  --sidebar-w:264px;--top-h:54px;--radius:10px;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;--trans:.16s ease;
+}
+[data-theme="light"]{
+  --bg:#f0f2fa;--bg2:#ffffff;--bg3:#e8eaf5;--border:#c9ceea;
+  --accent:#5b4fe8;--accent2:#1a9e72;--text:#1c1f36;--text2:#5a607a;
+  --error:#dc2626;--warn:#d97706;--success:#059669;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);overflow:hidden;}
+*{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:9px;}
+
+/* ── Loading Screen ── */
+#loading-screen{
+  position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:9999;gap:18px;transition:opacity .5s;
+}
+#loading-screen.hidden{opacity:0;pointer-events:none;}
+.loader-logo{font-size:2.6rem;font-weight:700;font-family:var(--mono);letter-spacing:-.02em;}
+.loader-logo span{color:var(--accent);}
+.loader-logo sub{font-size:.6rem;color:var(--text2);vertical-align:middle;margin-left:5px;}
+.loader-bar-wrap{width:220px;height:5px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+.loader-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s;}
+.loader-msg{font-size:.82rem;color:var(--text2);}
+
+/* ── App Shell ── */
+#app{display:flex;flex-direction:column;height:100vh;}
+
+/* ── Top Bar ── */
+#topbar{
+  height:var(--top-h);background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0;z-index:100;
+}
+.logo{font-family:var(--mono);font-size:.95rem;font-weight:700;white-space:nowrap;}
+.logo span{color:var(--accent);}
+.logo sub{font-size:.6rem;color:var(--text2);vertical-align:middle;margin-left:3px;}
+.topbar-spacer{flex:1;}
+.tb-btn{
+  border:1px solid var(--border);background:var(--bg3);color:var(--text);border-radius:7px;
+  padding:5px 11px;font-size:.76rem;font-family:var(--sans);cursor:pointer;
+  display:flex;align-items:center;gap:5px;transition:background var(--trans),border-color var(--trans);white-space:nowrap;
+}
+.tb-btn:hover{background:var(--border);}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+.tb-btn.primary:hover{filter:brightness(1.12);}
+.tb-btn svg{width:14px;height:14px;fill:currentColor;flex-shrink:0;}
+kbd{font-size:.66rem;background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 4px;color:var(--text2);font-family:var(--mono);}
+
+/* ── Main ── */
+#main{display:flex;flex:1;overflow:hidden;}
+
+/* ── Sidebar ── */
+#sidebar{
+  width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;
+  transition:width var(--trans),transform var(--trans);
+}
+#sidebar.collapsed{width:0;}
+
+.sidebar-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.stab{
+  flex:1;padding:8px 4px;font-size:.7rem;font-weight:700;cursor:pointer;text-align:center;
+  color:var(--text2);border-bottom:2px solid transparent;letter-spacing:.04em;
+  transition:color var(--trans),border-color var(--trans);
+}
+.stab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.sidebar-panel{display:none;flex-direction:column;flex:1;overflow:hidden;}
+.sidebar-panel.active{display:flex;}
+
+.sidebar-search{padding:7px 8px;flex-shrink:0;}
+.sidebar-search input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  color:var(--text);padding:5px 9px;font-size:.77rem;font-family:var(--sans);outline:none;
+}
+.sidebar-search input:focus{border-color:var(--accent);}
+
+.sidebar-list{flex:1;overflow-y:auto;padding:4px 6px;display:flex;flex-direction:column;gap:1px;}
+
+.slist-item{
+  padding:6px 9px;border-radius:6px;cursor:pointer;font-size:.79rem;
+  display:flex;align-items:center;gap:7px;transition:background var(--trans);color:var(--text);
+}
+.slist-item:hover{background:var(--bg3);}
+.slist-item.active{background:var(--accent);color:#fff;}
+.slist-item .tag{font-size:.63rem;background:var(--bg3);border-radius:4px;padding:1px 5px;color:var(--text2);margin-left:auto;flex-shrink:0;}
+.slist-item.active .tag{background:rgba(255,255,255,.2);color:#fff;}
+.section-label{font-size:.63rem;font-weight:700;color:var(--text2);letter-spacing:.08em;padding:9px 9px 3px;text-transform:uppercase;}
+
+/* Challenge Card */
+.challenge-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  margin:4px 6px;padding:9px 11px;display:flex;flex-direction:column;gap:6px;
+}
+.challenge-card .q{font-size:.78rem;font-weight:500;color:var(--text);line-height:1.45;}
+.challenge-card .q-num{font-size:.63rem;color:var(--accent);font-weight:700;font-family:var(--mono);}
+.challenge-btns{display:flex;gap:5px;}
+.c-btn{
+  flex:1;padding:5px 0;border-radius:5px;border:1px solid var(--border);background:var(--bg2);
+  font-size:.7rem;cursor:pointer;color:var(--text2);font-family:var(--sans);transition:background var(--trans);
+}
+.c-btn:hover{background:var(--border);}
+.c-btn.sol{border-color:var(--accent);color:var(--accent);}
+.c-btn.sol:hover{background:var(--accent);color:#fff;}
+.hint-box,.sol-box{
+  background:var(--bg);border-left:3px solid var(--warn);border-radius:0 5px 5px 0;
+  padding:6px 9px;font-size:.74rem;color:var(--text2);display:none;white-space:pre-wrap;line-height:1.5;
+}
+.sol-box{border-color:var(--accent2);color:var(--text);font-family:var(--mono);font-size:.71rem;}
+.hint-box.show,.sol-box.show{display:block;}
+
+/* ── Editor Area ── */
+#editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+/* Editor Toolbar */
+#editor-toolbar{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:5px;padding:5px 10px;flex-shrink:0;flex-wrap:wrap;
+}
+.file-name-badge{
+  font-family:var(--mono);font-size:.76rem;color:var(--text2);background:var(--bg3);
+  border:1px solid var(--border);border-radius:5px;padding:3px 9px;cursor:pointer;
+}
+.file-name-badge:hover{border-color:var(--accent);}
+.toolbar-spacer{flex:1;}
+.et-btn{
+  border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:5px;
+  padding:4px 9px;font-size:.74rem;cursor:pointer;display:flex;align-items:center;gap:4px;
+  font-family:var(--sans);transition:background var(--trans),color var(--trans);white-space:nowrap;
+}
+.et-btn:hover{background:var(--bg3);color:var(--text);}
+.et-btn svg{width:13px;height:13px;fill:currentColor;}
+
+/* ── Panes ── */
+#panes{flex:1;display:flex;overflow:hidden;}
+#editor-pane{flex:1.5;display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;min-width:0;}
+#output-pane{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.pane-header{
+  background:var(--bg2);border-bottom:1px solid var(--border);padding:5px 13px;
+  font-size:.7rem;font-weight:700;letter-spacing:.06em;color:var(--text2);
+  display:flex;align-items:center;gap:7px;flex-shrink:0;
+}
+.dot{width:8px;height:8px;border-radius:50%;}
+.dot-py{background:#4d9ef7;}
+.dot-out{background:var(--accent2);}
+
+/* CodeMirror */
+.cm-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.CodeMirror{flex:1;height:100%;font-family:var(--mono);font-size:14px;line-height:1.65;background:var(--bg)!important;}
+.CodeMirror-scroll{padding-bottom:40px;}
+[data-theme="light"] .CodeMirror{background:#f8f9ff!important;}
+.CodeMirror-gutters{background:var(--bg2)!important;border-right:1px solid var(--border)!important;}
+[data-theme="light"] .CodeMirror-gutters{background:#eef0fa!important;}
+.CodeMirror-linenumber{color:var(--text2)!important;font-size:12px;}
+
+/* Output Console */
+#output-console{
+  flex:1;overflow-y:auto;padding:11px 14px;font-family:var(--mono);font-size:13px;
+  line-height:1.7;background:var(--bg);white-space:pre-wrap;word-break:break-word;
+}
+.out-text{color:var(--text);}
+.out-err{color:var(--error);}
+.out-sys{color:var(--text2);font-style:italic;}
+.out-hint{color:var(--accent2);}
+.output-footer{
+  background:var(--bg2);border-top:1px solid var(--border);padding:4px 11px;
+  font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+#run-time{margin-left:auto;}
+
+/* Status Bar */
+#statusbar{
+  height:22px;background:var(--accent);color:#fff;
+  display:flex;align-items:center;gap:14px;padding:0 12px;font-size:.67rem;
+  font-family:var(--mono);flex-shrink:0;
+}
+#statusbar span{opacity:.85;}
+#status-msg{margin-left:auto;opacity:1!important;font-weight:700;}
+
+/* Input Modal */
+#input-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+#input-modal.show{display:flex;}
+.modal-box{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:22px;width:min(410px,92vw);display:flex;flex-direction:column;gap:13px;
+  box-shadow:0 24px 64px rgba(0,0,0,.45);
+}
+.modal-title{font-size:.98rem;font-weight:700;color:var(--text);}
+.modal-prompt{font-family:var(--mono);font-size:.8rem;color:var(--accent2);background:var(--bg3);padding:7px 11px;border-radius:6px;}
+.modal-input-wrap input{
+  width:100%;background:var(--bg3);border:2px solid var(--accent);border-radius:7px;
+  color:var(--text);padding:9px 13px;font-size:.93rem;font-family:var(--mono);outline:none;
+}
+.modal-actions{display:flex;gap:7px;}
+.modal-btn{
+  flex:1;padding:9px;border-radius:7px;border:none;cursor:pointer;font-size:.86rem;
+  font-family:var(--sans);font-weight:600;transition:filter var(--trans);
+}
+.modal-btn.submit{background:var(--accent);color:#fff;}
+.modal-btn.submit:hover{filter:brightness(1.12);}
+.modal-btn.cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+
+/* Topics Popover */
+#topics-popover{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);
+}
+#topics-popover.show{display:flex;}
+.topics-box{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:20px;width:min(560px,95vw);max-height:80vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.topics-title{font-size:.98rem;font-weight:700;display:flex;align-items:center;justify-content:space-between;}
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px;}
+.topic-chip{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;
+  cursor:pointer;font-size:.78rem;font-weight:500;transition:background var(--trans),border-color var(--trans);
+  display:flex;align-items:center;gap:7px;
+}
+.topic-chip:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+.close-x{cursor:pointer;color:var(--text2);font-size:1.2rem;line-height:1;}
+.close-x:hover{color:var(--error);}
+
+/* Fullscreen */
+#editor-pane.fullscreen{position:fixed;inset:0;z-index:3000;border:none!important;}
+
+/* Hidden file input */
+#file-upload{display:none;}
+
+/* Responsive */
+@media(max-width:700px){
+  #sidebar{position:absolute;z-index:200;height:calc(100% - var(--top-h));top:var(--top-h);}
+  #sidebar.collapsed{transform:translateX(-110%);width:var(--sidebar-w);}
+  #panes{flex-direction:column;}
+  #editor-pane{border-right:none;border-bottom:1px solid var(--border);flex:1.2;}
+  #output-pane{flex:1;}
+  .CodeMirror{font-size:13px;}
+  .tb-btn span,.et-btn span{display:none;}
+  #editor-toolbar{gap:3px;padding:4px 7px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <div class="loader-logo"><span>Py</span>Lab<sub>Class 10</sub></div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
+  <div class="loader-msg" id="loader-msg">Starting up…</div>
+</div>
+
+<!-- Input Modal -->
+<div id="input-modal">
+  <div class="modal-box">
+    <div class="modal-title">🐍 Program needs input</div>
+    <div class="modal-prompt" id="modal-prompt-text">Enter value:</div>
+    <div class="modal-input-wrap"><input type="text" id="modal-input" placeholder="Type here and press Enter" /></div>
+    <div class="modal-actions">
+      <button class="modal-btn cancel" id="modal-cancel-btn">Cancel</button>
+      <button class="modal-btn submit" id="modal-submit-btn">Submit ↵</button>
+    </div>
+  </div>
+</div>
+
+<!-- Topics Popover -->
+<div id="topics-popover">
+  <div class="topics-box">
+    <div class="topics-title">
+      📚 Class 10 Python Topics
+      <span class="close-x" id="topics-close">×</span>
+    </div>
+    <div class="topics-grid" id="topics-grid"></div>
+  </div>
+</div>
+
+<input type="file" id="file-upload" accept=".py,.txt" />
+
+<!-- App -->
+<div id="app">
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div class="logo"><span>Py</span>Lab<sub>Class 10</sub></div>
+    <button class="tb-btn" id="sidebar-toggle-btn" title="Toggle Sidebar">
+      <svg viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="2" rx="1"/><rect x="2" y="9" width="16" height="2" rx="1"/><rect x="2" y="14" width="16" height="2" rx="1"/></svg>
+    </button>
+    <button class="tb-btn" id="topics-btn">
+      <svg viewBox="0 0 20 20"><path d="M3 4h14v2H3V4zm0 5h14v2H3V9zm0 5h9v2H3v-2z"/></svg>
+      <span>Topics</span>
+    </button>
+    <div class="topbar-spacer"></div>
+    <button class="tb-btn" id="theme-btn" title="Toggle Theme">
+      <svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 1 0 0 16A8 8 0 0 0 10 2zm0 14V4a6 6 0 0 1 0 12z"/></svg>
+      <span id="theme-label">Light</span>
+    </button>
+    <button class="tb-btn primary" id="run-btn" title="Run (Ctrl+Enter)">
+      <svg viewBox="0 0 20 20"><path d="M6 4l12 6-12 6V4z"/></svg>
+      <span>Run</span>&nbsp;<kbd>Ctrl+↵</kbd>
+    </button>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div class="sidebar-tabs">
+        <div class="stab active" data-tab="programs">Programs</div>
+        <div class="stab" data-tab="topics">Topics</div>
+        <div class="stab" data-tab="practice">Practice</div>
+      </div>
+
+      <div class="sidebar-panel active" id="panel-programs">
+        <div class="sidebar-search"><input type="text" id="prog-search" placeholder="Search programs…" /></div>
+        <div class="sidebar-list" id="programs-list"></div>
+      </div>
+
+      <div class="sidebar-panel" id="panel-topics">
+        <div class="sidebar-list" id="topics-list"></div>
+      </div>
+
+      <div class="sidebar-panel" id="panel-practice">
+        <div class="sidebar-list" id="practice-list" style="gap:7px;padding:7px;"></div>
+      </div>
+    </div>
+
+    <!-- Editor Area -->
+    <div id="editor-area">
+
+      <!-- Editor Toolbar -->
+      <div id="editor-toolbar">
+        <span class="file-name-badge" id="file-name-badge" title="Click to rename">untitled.py</span>
+        <div class="toolbar-spacer"></div>
+        <button class="et-btn" id="copy-btn" title="Copy Code">
+          <svg viewBox="0 0 20 20"><path d="M7 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H7zm0 2h8v10H7V5zM3 7H1v10a2 2 0 0 0 2 2h10v-2H3V7z"/></svg>
+          <span>Copy</span>
+        </button>
+        <button class="et-btn" id="download-btn" title="Download .py">
+          <svg viewBox="0 0 20 20"><path d="M10 13l-4-4h3V3h2v6h3l-4 4zm-6 4h12v-2H4v2z"/></svg>
+          <span>Download</span>
+        </button>
+        <button class="et-btn" id="upload-btn" title="Upload .py">
+          <svg viewBox="0 0 20 20"><path d="M10 7l4 4h-3v6H9v-6H6l4-4zM4 3h12v2H4V3z"/></svg>
+          <span>Upload</span>
+        </button>
+        <button class="et-btn" id="fullscreen-btn" title="Fullscreen (F11)">
+          <svg viewBox="0 0 20 20"><path d="M3 3h5v2H5v3H3V3zm9 0h5v5h-2V5h-3V3zM3 12h2v3h3v2H3v-5zm12 3h-3v2h5v-5h-2v3z"/></svg>
+          <span>Full</span>
+        </button>
+        <button class="et-btn" id="clear-editor-btn" title="Clear Editor">
+          <svg viewBox="0 0 20 20"><path d="M6 4l1-1h6l1 1h3v2H3V4h3zm1 3h6l-.5 10h-5L7 7z"/></svg>
+          <span>Clear</span>
+        </button>
+      </div>
+
+      <!-- Panes -->
+      <div id="panes">
+
+        <!-- Editor Pane -->
+        <div id="editor-pane">
+          <div class="pane-header">
+            <span class="dot dot-py"></span> PYTHON EDITOR
+          </div>
+          <div class="cm-wrap">
+            <textarea id="code-editor"></textarea>
+          </div>
+        </div>
+
+        <!-- Output Pane -->
+        <div id="output-pane">
+          <div class="pane-header" style="justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span class="dot dot-out"></span> OUTPUT CONSOLE
+            </div>
+            <button class="et-btn" id="clear-output-btn">
+              <svg viewBox="0 0 20 20"><path d="M6 4l1-1h6l1 1h3v2H3V4h3zm1 3h6l-.5 10h-5L7 7z"/></svg>
+              Clear
+            </button>
+          </div>
+          <div id="output-console"><span class="out-sys">▸ Output will appear here when you run code.
+▸ Press Ctrl+Enter (or click Run) to execute.</span></div>
+          <div class="output-footer">
+            <span id="out-status">Ready</span>
+            <span id="run-time"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div id="statusbar">
+    <span id="sb-line">Ln 1, Col 1</span>
+    <span id="sb-sel"></span>
+    <span id="sb-py">Python 3.11 (Pyodide)</span>
+    <span id="status-msg">🚀 Python Lab – Class 10</span>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
+
+<script>
+/* ============================================================
+   DATA
+============================================================ */
+const PROGRAMS = [
+  { category:"Basics", items:[
+    { name:"Hello World", tag:"print",
+      code:`# Hello World – Your first Python program!
+print("Hello, World!")
+print("Welcome to Python Lab!")
+print("Class 10 – Let's code! 🐍")
+print()
+# You can print anything:
+print("2 + 3 =", 2 + 3)
+print("Name:", "Student")`
+    },
+    { name:"Variables & Assignment", tag:"var",
+      code:`# Variables in Python
+# Variables store data values – no need to declare type!
+name     = "Arjun"
+age      = 15
+grade    = 10
+pi       = 3.14159
+is_student = True
+
+print("Name      :", name)
+print("Age       :", age)
+print("Grade     :", grade)
+print("Pi        :", pi)
+print("Is Student:", is_student)
+
+# Multiple assignment
+x = y = z = 0
+a, b, c = 10, 20, 30
+print("x y z:", x, y, z)
+print("a b c:", a, b, c)`
+    },
+    { name:"Data Types", tag:"types",
+      code:`# Data Types in Python
+int_val  = 42          # Integer (whole numbers)
+float_val= 3.14        # Float   (decimal numbers)
+str_val  = "Hello"     # String  (text)
+bool_val = True        # Boolean (True / False)
+none_val = None        # NoneType
+
+print("int  :", int_val,   "->", type(int_val))
+print("float:", float_val, "->", type(float_val))
+print("str  :", str_val,   "->", type(str_val))
+print("bool :", bool_val,  "->", type(bool_val))
+print("none :", none_val,  "->", type(none_val))`
+    },
+    { name:"Type Conversion", tag:"cast",
+      code:`# Type Conversion (Casting)
+# int(), float(), str(), bool()
+
+s = "25"
+f = 9.8
+n = 100
+
+print(int(s) + 5)      # "25" -> 25 -> 30
+print(float(n))        # 100  -> 100.0
+print(str(n) + " kg")  # 100  -> "100 kg"
+print(int(f))          # 9.8  -> 9 (truncates)
+print(bool(0))         # 0    -> False
+print(bool(42))        # 42   -> True
+
+# Practical: convert user input to int
+age = int(input("Enter your age: "))
+print(f"In 5 years you will be {age + 5}.")`
+    },
+    { name:"Operators", tag:"ops",
+      code:`# All Python Operators
+a, b = 17, 5
+
+# Arithmetic
+print("--- Arithmetic ---")
+print("a + b =", a + b)
+print("a - b =", a - b)
+print("a * b =", a * b)
+print("a / b =", a / b)   # float division
+print("a //b =", a // b)  # floor division
+print("a % b =", a % b)   # modulus/remainder
+print("a **b =", a ** b)  # exponentiation
+
+# Comparison  (returns True/False)
+print("--- Comparison ---")
+print(a > b, a < b, a == b, a != b, a >= b, a <= b)
+
+# Logical
+print("--- Logical ---")
+print(True and False)
+print(True or  False)
+print(not True)
+
+# Assignment shorthand
+x = 10
+x += 3;  print("+=", x)
+x -= 2;  print("-=", x)
+x *= 2;  print("*=", x)
+x //= 3; print("//=",x)`
+    },
+  ]},
+  { category:"Control Flow", items:[
+    { name:"Conditionals (if-elif-else)", tag:"if",
+      code:`# If – Elif – Else
+marks = int(input("Enter your marks (0-100): "))
+
+if marks >= 90:
+    grade = "A+"
+    result = "Distinction"
+elif marks >= 80:
+    grade = "A"
+    result = "First Class"
+elif marks >= 70:
+    grade = "B"
+    result = "Second Class"
+elif marks >= 60:
+    grade = "C"
+    result = "Pass"
+elif marks >= 40:
+    grade = "D"
+    result = "Pass"
+else:
+    grade = "F"
+    result = "Fail"
+
+print(f"\\nMarks : {marks}")
+print(f"Grade : {grade}")
+print(f"Result: {result}")`
+    },
+    { name:"For Loop", tag:"for",
+      code:`# For Loop – Iterate over sequences or ranges
+print("1 to 5:")
+for i in range(1, 6):
+    print(i, end=" ")
+print()
+
+# Loop over a list
+fruits = ["Apple", "Banana", "Cherry", "Mango"]
+print("\\nFruits:")
+for fruit in fruits:
+    print(" •", fruit)
+
+# Enumerate (index + value)
+print("\\nWith index:")
+for idx, fruit in enumerate(fruits, start=1):
+    print(f"  {idx}. {fruit}")
+
+# Nested loop – star pattern
+print("\\nStar Pattern:")
+for i in range(1, 6):
+    print("★ " * i)`
+    },
+    { name:"While Loop", tag:"while",
+      code:`# While Loop
+# Count down
+n = 5
+print("Countdown:")
+while n > 0:
+    print(n, end=" ")
+    n -= 1
+print("Go! 🚀")
+
+# Sum with break
+print("\\nEnter numbers to add (0 to stop):")
+total = 0
+while True:
+    num = int(input("  Number: "))
+    if num == 0:
+        break
+    total += num
+    print(f"  Running total = {total}")
+
+print(f"Final sum = {total}")`
+    },
+    { name:"Break, Continue, Pass", tag:"loop",
+      code:`# break, continue, pass
+
+# break – exit loop early
+print("break example (stop at 5):")
+for i in range(1, 11):
+    if i == 6:
+        break
+    print(i, end=" ")
+print()
+
+# continue – skip current iteration
+print("\\ncontinue example (skip even):")
+for i in range(1, 11):
+    if i % 2 == 0:
+        continue
+    print(i, end=" ")
+print()
+
+# pass – placeholder (do nothing)
+print("\\npass example:")
+for i in range(5):
+    if i == 3:
+        pass   # placeholder for future code
+    print(i, end=" ")
+print()`
+    },
+  ]},
+  { category:"Functions", items:[
+    { name:"Functions (def)", tag:"def",
+      code:`# Functions – reusable blocks of code
+
+def greet(name, age=10):
+    """Greet a student with optional age."""
+    print(f"Hello, {name}! You are {age} years old.")
+
+def add(a, b):
+    """Return sum of two numbers."""
+    return a + b
+
+def rectangle_area(length, width):
+    """Return area and perimeter of a rectangle."""
+    area      = length * width
+    perimeter = 2 * (length + width)
+    return area, perimeter   # return multiple values
+
+# Call functions
+greet("Priya")
+greet("Rahul", 16)
+
+print("\\n7 + 8 =", add(7, 8))
+
+area, peri = rectangle_area(5, 3)
+print(f"\\nRectangle 5×3 -> Area={area}, Perimeter={peri}")`
+    },
+    { name:"Lambda & Recursion", tag:"adv",
+      code:`# Lambda functions & Recursion
+
+# Lambda – small anonymous function
+square  = lambda x: x ** 2
+double  = lambda x: x * 2
+add     = lambda a, b: a + b
+
+print("Square of 7:", square(7))
+print("Double of 9:", double(9))
+print("3 + 4 =",     add(3, 4))
+
+# Using lambda with sorted()
+words = ["banana", "apple", "cherry", "date"]
+print("Sorted by length:", sorted(words, key=lambda w: len(w)))
+
+# Recursion – function calling itself
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+for i in range(1, 8):
+    print(f"{i}! = {factorial(i)}")`
+    },
+  ]},
+  { category:"Strings", items:[
+    { name:"String Operations", tag:"str",
+      code:`# String Methods & Operations
+s = "Python Programming"
+
+print("Original :", s)
+print("Upper    :", s.upper())
+print("Lower    :", s.lower())
+print("Title    :", s.title())
+print("Length   :", len(s))
+print("Reversed :", s[::-1])
+print("Replace  :", s.replace("Python", "Class 10"))
+print("Split    :", s.split())
+print("Starts Py:", s.startswith("Py"))
+print("Count 'r':", s.count("r"))
+print("Strip    :", "  hello  ".strip())
+print("Find 'Pro':", s.find("Pro"))
+print()
+# Slicing
+print("First 6 chars:", s[:6])
+print("Last 11 chars:", s[-11:])
+print("Every 2nd    :", s[::2])
+print()
+# f-strings
+name = input("Your name: ")
+print(f"Hi {name.title()}! Your name has {len(name)} letters.")`
+    },
+  ]},
+  { category:"Collections", items:[
+    { name:"Lists", tag:"list",
+      code:`# Lists – ordered, mutable sequences
+nums = [5, 3, 8, 1, 9, 2, 7, 4, 6]
+print("Original:", nums)
+
+# Common operations
+nums.append(10)
+print("append(10):", nums)
+nums.insert(0, 0)
+print("insert(0,0):", nums)
+nums.remove(3)
+print("remove(3):", nums)
+popped = nums.pop()
+print(f"pop() -> {popped}, list:", nums)
+
+# Sorting
+print("sorted():", sorted(nums))
+print("reversed:", nums[::-1])
+print("Max:", max(nums), "| Min:", min(nums), "| Sum:", sum(nums))
+
+# Slicing
+print("First 3:", nums[:3])
+print("Last 3 :", nums[-3:])
+
+# List comprehension
+squares = [x**2 for x in range(1, 6)]
+print("Squares:", squares)
+evens   = [x for x in range(1, 21) if x % 2 == 0]
+print("Evens  :", evens)`
+    },
+    { name:"Tuples", tag:"tuple",
+      code:`# Tuples – ordered, IMMUTABLE sequences
+point  = (3, 7)
+colors = ("red", "green", "blue")
+info   = ("Anjali", 15, "Class 10")
+
+print("Point :", point)
+print("x =", point[0], "y =", point[1])
+print("Colors:", colors)
+
+# Tuple unpacking
+name, age, cls = info
+print(f"Name: {name}, Age: {age}, Class: {cls}")
+
+# Operations
+nums = (4, 1, 9, 2, 7, 1, 1, 5)
+print("Count of 1:", nums.count(1))
+print("Index of 9:", nums.index(9))
+print("Max:", max(nums), "| Min:", min(nums))
+print("Sorted (as list):", sorted(nums))
+
+# Tuple is immutable – this would cause an error:
+# nums[0] = 99  <- TypeError
+
+# Convert tuple <-> list
+lst = list(colors)
+lst.append("yellow")
+print("New tuple:", tuple(lst))`
+    },
+    { name:"Dictionaries", tag:"dict",
+      code:`# Dictionaries – key:value pairs
+student = {
+    "name"  : "Rahul",
+    "age"   : 15,
+    "class" : 10,
+    "marks" : {"Maths": 95, "Science": 88, "English": 76}
+}
+
+# Access
+print("Name  :", student["name"])
+print("Maths :", student["marks"]["Maths"])
+print("Age   :", student.get("age", "N/A"))  # safe get
+
+# Add & update
+student["city"] = "Delhi"
+student["age"]  = 16
+print("\\nUpdated age:", student["age"])
+print("City added :", student["city"])
+
+# Iterate
+print("\\nAll marks:")
+for sub, mark in student["marks"].items():
+    print(f"  {sub:10} -> {mark}")
+
+# Dict methods
+print("Keys  :", list(student.keys()))
+print("'city' in dict:", "city" in student)
+
+# Dict comprehension
+cube = {x: x**3 for x in range(1, 6)}
+print("Cubes:", cube)`
+    },
+    { name:"Sets", tag:"set",
+      code:`# Sets – unordered, unique elements
+a = {1, 2, 3, 4, 5}
+b = {4, 5, 6, 7, 8}
+
+print("Set A:", a)
+print("Set B:", b)
+
+# Set operations
+print("Union       :", a | b)
+print("Intersection:", a & b)
+print("Difference  :", a - b)
+print("Symmetric   :", a ^ b)
+
+# Useful: remove duplicates from a list
+lst = [1, 2, 2, 3, 4, 4, 5, 5, 5]
+unique = list(set(lst))
+print("\\nOriginal list:", lst)
+print("Unique values:", sorted(unique))
+
+# Set methods
+s = {10, 20, 30}
+s.add(40)
+s.discard(20)
+print("After add/discard:", s)`
+    },
+  ]},
+  { category:"Programs", items:[
+    { name:"Area of Circle", tag:"math",
+      code:`# Area and Circumference of a Circle
+import math
+
+r = float(input("Enter the radius: "))
+
+area          = math.pi * r ** 2
+circumference = 2 * math.pi * r
+diameter      = 2 * r
+
+print(f"\\nRadius        : {r}")
+print(f"Diameter      : {diameter:.4f}")
+print(f"Area          : {area:.4f}")
+print(f"Circumference : {circumference:.4f}")`
+    },
+    { name:"Even or Odd", tag:"cond",
+      code:`# Check Even or Odd
+n = int(input("Enter an integer: "))
+
+if n % 2 == 0:
+    print(f"{n} is EVEN ✅")
+else:
+    print(f"{n} is ODD ✅")
+
+# Bonus: first 10 even & odd numbers
+evens = [x for x in range(1, 21) if x % 2 == 0]
+odds  = [x for x in range(1, 21) if x % 2 != 0]
+print("\\nFirst 10 even:", evens)
+print("First 10 odd :", odds)`
+    },
+    { name:"Largest of Three", tag:"cond",
+      code:`# Find the Largest of Three Numbers
+a = float(input("First number : "))
+b = float(input("Second number: "))
+c = float(input("Third number : "))
+
+# Method 1 – using max()
+print(f"\\nLargest (max): {max(a, b, c)}")
+
+# Method 2 – using if-elif
+if a >= b and a >= c:
+    largest = a
+elif b >= a and b >= c:
+    largest = b
+else:
+    largest = c
+print(f"Largest (if) : {largest}")`
+    },
+    { name:"Factorial", tag:"loop",
+      code:`# Factorial of a Number  (n!)
+n = int(input("Enter a non-negative integer: "))
+
+if n < 0:
+    print("Factorial is undefined for negative numbers.")
+elif n == 0:
+    print("0! = 1")
+else:
+    fact = 1
+    for i in range(1, n + 1):
+        fact *= i
+    print(f"\\n{n}! = {fact}")
+
+    if n <= 15:
+        chain = " × ".join(str(i) for i in range(1, n + 1))
+        print(f"Chain: {chain} = {fact}")`
+    },
+    { name:"Fibonacci Series", tag:"loop",
+      code:`# Fibonacci Series
+n = int(input("How many Fibonacci terms to display? "))
+
+a, b = 0, 1
+print(f"\\nFirst {n} Fibonacci numbers:")
+for i in range(n):
+    print(a, end="  ")
+    a, b = b, a + b
+print()
+
+# Display as numbered list
+print("\\nNumbered:")
+a, b = 0, 1
+for i in range(1, n + 1):
+    print(f"  F({i:2}) = {a}")
+    a, b = b, a + b`
+    },
+    { name:"Prime Number", tag:"loop",
+      code:`# Check Prime & List Primes
+def is_prime(n):
+    """Return True if n is a prime number."""
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(n**0.5) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+num = int(input("Enter a number to check: "))
+if is_prime(num):
+    print(f"\\n{num} is a PRIME number ✅")
+else:
+    print(f"\\n{num} is NOT a prime number ❌")
+
+# List all primes up to 100
+primes = [x for x in range(2, 101) if is_prime(x)]
+print(f"\\nPrimes up to 100 ({len(primes)} total):")
+print(primes)`
+    },
+    { name:"Multiplication Table", tag:"loop",
+      code:`# Multiplication Table
+n    = int(input("Enter number for its table: "))
+upto = int(input("Show table up to (e.g. 12): "))
+
+print(f"\\nMultiplication Table of {n}")
+print("─" * 26)
+for i in range(1, upto + 1):
+    bar = "█" * min(n * i // 5, 20)
+    print(f"  {n} × {i:2} = {n*i:4}  {bar}")`
+    },
+    { name:"Palindrome Check", tag:"str",
+      code:`# Palindrome Check (String & Number)
+def is_palindrome(s):
+    s = s.lower().replace(" ", "")
+    return s == s[::-1]
+
+# String palindrome
+word = input("Enter a word or phrase: ")
+if is_palindrome(word):
+    print(f'"{word}" IS a palindrome ✅')
+else:
+    print(f'"{word}" is NOT a palindrome ❌')
+
+# Number palindrome
+num = input("Enter a number: ")
+if num == num[::-1]:
+    print(f"{num} IS a numeric palindrome ✅")
+else:
+    print(f"{num} is NOT a numeric palindrome ❌")
+
+# Famous palindromes
+examples = ["racecar", "level", "madam", "ABCBA", "hello"]
+print("\\nExamples:")
+for w in examples:
+    tag = "✅" if is_palindrome(w) else "❌"
+    print(f"  {w:10} {tag}")`
+    },
+    { name:"Simple Calculator", tag:"all",
+      code:`# Simple Calculator
+def calculate(a, op, b):
+    if op == "+": return a + b
+    if op == "-": return a - b
+    if op == "*": return a * b
+    if op == "/":
+        if b == 0: return "Error: Division by zero!"
+        return a / b
+    if op == "**": return a ** b
+    if op == "%":  return a % b
+    return "Unknown operator"
+
+print("=== Simple Calculator ===")
+print("Operators: + - * / ** %")
+a  = float(input("First number : "))
+op = input("Operator     : ").strip()
+b  = float(input("Second number: "))
+
+result = calculate(a, op, b)
+print(f"\\n{a} {op} {b} = {result}")`
+    },
+    { name:"List Operations", tag:"list",
+      code:`# List Operations Demo
+n   = int(input("How many numbers to enter? "))
+lst = []
+
+for i in range(n):
+    x = float(input(f"  Number {i+1}: "))
+    lst.append(x)
+
+print(f"\\nYour list : {lst}")
+print(f"Sorted    : {sorted(lst)}")
+print(f"Reversed  : {lst[::-1]}")
+print(f"Sum       : {sum(lst)}")
+print(f"Average   : {sum(lst)/len(lst):.2f}")
+print(f"Max       : {max(lst)}")
+print(f"Min       : {min(lst)}")
+print(f"Length    : {len(lst)}")
+
+# Find unique elements
+unique = list(set(lst))
+print(f"Unique    : {sorted(unique)}")`
+    },
+  ]},
+];
+
+const TOPICS = [
+  { icon:"🖨️", name:"Print Statements",   code:`# print() function basics
+print("Hello, World!")
+print("Sum:", 2 + 3)
+print("Pi approx:", 3.14159)
+print("Line 1\\nLine 2\\nLine 3")
+print("A", "B", "C", sep=" | ")
+print("No newline", end="")
+print(" ← continued")
+print(f"Formatted: {10 * 5}")`},
+  { icon:"📦", name:"Variables",           code:`# Variables
+x      = 10
+name   = "Student"
+pi     = 3.14
+active = True
+print(x, name, pi, active)
+
+# Multiple assignment
+a, b, c = 1, 2, 3
+print(a, b, c)
+
+# Swap
+a, b = b, a
+print("Swapped:", a, b)`},
+  { icon:"🔢", name:"Data Types",          code:`# Data Types
+print(type(42))
+print(type(3.14))
+print(type("hello"))
+print(type(True))
+print(type(None))
+print(type([1,2]))
+print(type((1,2)))
+print(type({"a":1}))`},
+  { icon:"🔄", name:"Type Conversion",     code:`# Type Conversion
+print(int("25"))       # 25
+print(float(7))        # 7.0
+print(str(100))        # "100"
+print(bool(0))         # False
+print(bool(""))        # False
+print(bool("hi"))      # True
+print(list("Python"))  # ['P','y','t','h','o','n']`},
+  { icon:"➕", name:"Operators",           code:`a, b = 14, 4
+print(a+b, a-b, a*b)
+print(a/b, a//b, a%b)
+print(a**b)
+print(a>b, a==b, a!=b)
+print(True and False)
+print(True or  False)
+print(not True)`},
+  { icon:"🔀", name:"Conditionals",        code:`x = int(input("Enter number: "))
+if x > 0:
+    print("Positive ✅")
+elif x < 0:
+    print("Negative ❌")
+else:
+    print("Zero")`},
+  { icon:"🔁", name:"Loops",              code:`# for loop
+for i in range(1, 6):
+    print(i, end=" ")
+print()
+
+# while loop
+n = 1
+while n <= 5:
+    print(n, end=" ")
+    n += 1
+print()
+
+# list loop
+for fruit in ["Apple","Banana","Cherry"]:
+    print(fruit)`},
+  { icon:"🧩", name:"Functions",          code:`def square(n):
+    return n * n
+
+def greet(name="World"):
+    print(f"Hello, {name}!")
+
+def minmax(lst):
+    return min(lst), max(lst)
+
+print(square(9))
+greet("Priya")
+lo, hi = minmax([3,1,7,2])
+print(lo, hi)`},
+  { icon:"📝", name:"Strings",            code:`s = "Python Class 10"
+print(s.upper())
+print(s.lower())
+print(s.title())
+print(len(s))
+print(s[0], s[-1])
+print(s[7:12])
+print(s[::-1])
+print(s.replace("Class","Grade"))
+print(s.split())`},
+  { icon:"📋", name:"Lists",             code:`lst = [10, 30, 20, 50, 40]
+lst.append(60)
+lst.insert(0, 0)
+print(lst)
+print(sorted(lst))
+print(max(lst), min(lst), sum(lst))
+
+# Comprehension
+sq = [x**2 for x in range(1,6)]
+print(sq)`},
+  { icon:"📌", name:"Tuples",            code:`t = (10, 20, 30, 40, 50)
+print(t[0], t[-1])
+a, b, *rest = t
+print(a, b, rest)
+print(t.count(20))
+print(t.index(30))
+print(min(t), max(t))`},
+  { icon:"📖", name:"Dictionaries",      code:`d = {"name":"Alex","age":15,"grade":10}
+print(d["name"])
+d["city"] = "Mumbai"
+for k, v in d.items():
+    print(f"  {k}: {v}")
+print("Keys:", list(d.keys()))
+print("'age' in d:", "age" in d)`},
+];
+
+const CHALLENGES = [
+  { q:"Write a program to find the sum of digits of a given number (e.g. 1234 → 10).",
+    hint:"Convert the number to a string, iterate each character, convert to int, and sum.",
+    solution:`n = int(input("Enter number: "))
+total = sum(int(d) for d in str(abs(n)))
+print("Sum of digits:", total)` },
+  { q:"Print a right-angled star triangle with n rows (user input). Row 1 = 1 star, Row 2 = 2 stars …",
+    hint:"Loop from 1 to n. In each row i, print '*' * i.",
+    solution:`n = int(input("Number of rows: "))
+for i in range(1, n + 1):
+    print("*" * i)` },
+  { q:"Check if a string entered by the user is a palindrome (reads same forwards and backwards).",
+    hint:"Compare the cleaned string with its reverse: s == s[::-1]",
+    solution:`s = input("Enter string: ").lower().replace(" ","")
+if s == s[::-1]:
+    print(f'"{s}" is a palindrome ✅')
+else:
+    print(f'"{s}" is NOT a palindrome ❌')` },
+  { q:"Find all factors of a number entered by the user.",
+    hint:"Loop from 1 to n+1. If n % i == 0, i is a factor.",
+    solution:`n = int(input("Enter number: "))
+factors = [i for i in range(1, n+1) if n % i == 0]
+print(f"Factors of {n}: {factors}")` },
+  { q:"Reverse a list of numbers entered by the user WITHOUT using the .reverse() method.",
+    hint:"Use slicing: lst[::-1]",
+    solution:`nums = list(map(int, input("Enter numbers separated by spaces: ").split()))
+print("Reversed:", nums[::-1])` },
+  { q:"Count how many times each vowel (a, e, i, o, u) appears in a sentence.",
+    hint:"Loop through the string, check if each character is in 'aeiou'. Use a dict to count.",
+    solution:`sentence = input("Enter a sentence: ").lower()
+vowels = {}
+for ch in sentence:
+    if ch in "aeiou":
+        vowels[ch] = vowels.get(ch, 0) + 1
+for v, c in sorted(vowels.items()):
+    print(f"  '{v}' appears {c} time(s)")` },
+  { q:"Swap two variables WITHOUT using a temporary (third) variable.",
+    hint:"Python supports: a, b = b, a",
+    solution:`a = int(input("Enter a: "))
+b = int(input("Enter b: "))
+print(f"Before: a={a}, b={b}")
+a, b = b, a
+print(f"After : a={a}, b={b}")` },
+  { q:"Generate a list of squares of even numbers from 1 to 20 using list comprehension.",
+    hint:"[x**2 for x in range(1,21) if x % 2 == 0]",
+    solution:`squares = [x**2 for x in range(1, 21) if x % 2 == 0]
+print("Squares of even numbers (1–20):")
+print(squares)` },
+  { q:"Print a number pattern where row i contains numbers 1 through i (e.g. row 3 → 1 2 3).",
+    hint:"Use a nested loop: outer loop for rows, inner loop prints range(1, i+1).",
+    solution:`n = int(input("Number of rows: "))
+for i in range(1, n+1):
+    print(*range(1, i+1))` },
+  { q:"Find the second largest number in a list without using sort().",
+    hint:"Keep track of the largest and second-largest while iterating.",
+    solution:`nums = list(map(int, input("Enter numbers separated by spaces: ").split()))
+first = second = float('-inf')
+for n in nums:
+    if n > first:
+        second = first
+        first  = n
+    elif n > second and n != first:
+        second = n
+print("Second largest:", second)` },
+];
+
+/* ============================================================
+   STATE
+============================================================ */
+let pyodide      = null;
+let editor       = null;
+let isDark       = true;
+let inputResolve = null;
+let currentFile  = "untitled.py";
+let isSidebarOpen = true;
+let isFullscreen  = false;
+
+/* ============================================================
+   LOADER HELPERS
+============================================================ */
+const loaderBar = document.getElementById("loader-bar");
+const loaderMsg = document.getElementById("loader-msg");
+function setLoader(pct, msg){
+  loaderBar.style.width = pct + "%";
+  loaderMsg.textContent = msg;
+}
+
+/* ============================================================
+   PYODIDE INIT
+============================================================ */
+async function initPyodide(){
+  setLoader(10, "Loading Pyodide runtime (~10 MB)…");
+
+  // Inject Pyodide script
+  await new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js";
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+
+  setLoader(50, "Initializing Python 3.11…");
+  pyodide = await loadPyodide({ indexURL:"https://cdn.jsdelivr.net/pyodide/v0.25.1/full/" });
+
+  setLoader(85, "Setting up stdout / stderr / input…");
+
+  // Expose output handler to Python side
+  window._pyOutput = function(text, kind){
+    appendOutput(text, kind === "err" ? "out-err" : "out-text");
+  };
+
+  // Patch sys.stdout, sys.stderr, builtins.input inside Python
+  await pyodide.runPythonAsync(`
+import sys, builtins
+
+class _JsStream:
+    def __init__(self, kind):
+        self.kind = kind
+    def write(self, s):
+        from js import _pyOutput
+        _pyOutput(s, self.kind)
+        return len(s)
+    def flush(self): pass
+    def fileno(self): raise OSError("no real file")
+
+sys.stdout = _JsStream("out")
+sys.stderr = _JsStream("err")
+
+# Expose JS input callback
+from js import _jsInputCallback
+async def _async_input(prompt=""):
+    result = await _jsInputCallback(prompt)
+    return result
+
+builtins.input = _async_input
+`);
+
+  // The JS side of input()
+  window._jsInputCallback = (prompt) => new Promise(res => showInputModal(prompt, res));
+
+  setLoader(100, "Python ready ✓");
+  await new Promise(r => setTimeout(r, 380));
+  document.getElementById("loading-screen").classList.add("hidden");
+  setStatus("Python 3.11 ready ✓");
+  setTimeout(() => setStatus("🚀 Python Lab – Class 10"), 2800);
+}
+
+/* ============================================================
+   EDITOR INIT
+============================================================ */
+function initEditor(){
+  const PY_KEYWORDS = [
+    "False","None","True","and","as","assert","async","await","break",
+    "class","continue","def","del","elif","else","except","finally",
+    "for","from","global","if","import","in","is","lambda","nonlocal",
+    "not","or","pass","raise","return","try","while","with","yield",
+    "print","input","len","range","int","float","str","list","dict",
+    "tuple","set","bool","type","enumerate","zip","map","filter",
+    "sorted","reversed","max","min","sum","abs","round","open","format",
+    "isinstance","append","extend","insert","remove","pop","index","count",
+    "sort","reverse","keys","values","items","get","update","upper",
+    "lower","strip","split","join","replace","find","startswith",
+    "endswith","title","capitalize","math","random","os","sys","datetime",
+    "json","re","super","property","staticmethod","classmethod",
+  ];
+
+  editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
+    mode:            "python",
+    theme:           "dracula",
+    lineNumbers:     true,
+    matchBrackets:   true,
+    autoCloseBrackets: true,
+    indentUnit:      4,
+    tabSize:         4,
+    indentWithTabs:  false,
+    lineWrapping:    false,
+    scrollbarStyle:  "native",
+    extraKeys:{
+      "Ctrl-Enter":  runCode,
+      "Cmd-Enter":   runCode,
+      "Ctrl-S":      saveCode,
+      "Cmd-S":       saveCode,
+      "Ctrl-/":      cm => cm.execCommand("toggleComment"),
+      "Ctrl-Space":  "autocomplete",
+      "Tab": cm => {
+        if (cm.somethingSelected()) cm.indentSelection("add");
+        else cm.replaceSelection("    ");
+      },
+    },
+    hintOptions:{ words: PY_KEYWORDS },
+  });
+
+  editor.on("cursorActivity", updateStatusBar);
+  editor.on("change", () => {
+    clearTimeout(window._saveTimer);
+    window._saveTimer = setTimeout(() => {
+      localStorage.setItem("pylab_code", editor.getValue());
+      setStatus("Auto-saved ✓");
+      setTimeout(() => setStatus("🚀 Python Lab – Class 10"), 1400);
+    }, 900);
+  });
+
+  editor.setSize("100%", "100%");
+
+  // Restore autosaved code or load default
+  const saved     = localStorage.getItem("pylab_code");
+  const savedName = localStorage.getItem("pylab_filename");
+  if (saved) {
+    editor.setValue(saved);
+    if (savedName) setFileName(savedName);
+  } else {
+    loadProgram(PROGRAMS[0].items[0]);
+  }
+}
+
+/* ============================================================
+   RUN CODE
+============================================================ */
+async function runCode(){
+  if (!pyodide){
+    appendOutput("⚠ Python is still loading. Please wait a moment…\n","out-sys");
+    return;
+  }
+  const code = editor.getValue().trim();
+  if (!code){ appendOutput("Nothing to run!\n","out-sys"); return; }
+
+  clearOutput();
+  const t0 = performance.now();
+  setStatus("▶ Running…");
+  document.getElementById("out-status").textContent = "Running…";
+  document.getElementById("run-btn").disabled = true;
+
+  try {
+    await pyodide.runPythonAsync(code);
+    const ms = (performance.now() - t0).toFixed(1);
+    document.getElementById("run-time").textContent   = `${ms} ms`;
+    document.getElementById("out-status").textContent = "Done ✓";
+    setStatus("Done ✓");
+  } catch(err){
+    // Pretty-print the error
+    let msg = err.message || String(err);
+    // Strip internal pyodide frames
+    const lines = msg.split("\n").filter(l =>
+      !l.includes("pyodide") && !l.includes("_run_python") &&
+      !l.startsWith("  at ") && !l.startsWith("    at ")
+    );
+    appendOutput((lines.join("\n") || msg).trim() + "\n", "out-err");
+    document.getElementById("out-status").textContent = "Error ✗";
+    setStatus("Error ✗");
+  } finally {
+    document.getElementById("run-btn").disabled = false;
+  }
+}
+
+/* ============================================================
+   OUTPUT HELPERS
+============================================================ */
+function appendOutput(text, cls){
+  const con = document.getElementById("output-console");
+  // Remove initial placeholder
+  const ph = con.querySelector(".out-sys");
+  if (ph && ph.textContent.includes("Output will appear")) ph.remove();
+  const span = document.createElement("span");
+  span.className = cls;
+  span.textContent = text;
+  con.appendChild(span);
+  con.scrollTop = con.scrollHeight;
+}
+
+function clearOutput(){
+  document.getElementById("output-console").innerHTML = "";
+  document.getElementById("run-time").textContent   = "";
+  document.getElementById("out-status").textContent = "Ready";
+}
+
+/* ============================================================
+   INPUT MODAL
+============================================================ */
+function showInputModal(promptText, resolve){
+  inputResolve = resolve;
+  document.getElementById("modal-prompt-text").textContent = promptText || "Enter value:";
+  document.getElementById("modal-input").value = "";
+  document.getElementById("input-modal").classList.add("show");
+  setTimeout(() => document.getElementById("modal-input").focus(), 80);
+}
+function submitInput(){
+  const val = document.getElementById("modal-input").value;
+  document.getElementById("input-modal").classList.remove("show");
+  appendOutput(val + "\n", "out-hint");   // echo input
+  if (inputResolve){ inputResolve(val); inputResolve = null; }
+}
+function cancelInput(){
+  document.getElementById("input-modal").classList.remove("show");
+  if (inputResolve){ inputResolve(""); inputResolve = null; }
+}
+document.getElementById("modal-submit-btn").addEventListener("click", submitInput);
+document.getElementById("modal-cancel-btn").addEventListener("click", cancelInput);
+document.getElementById("modal-input").addEventListener("keydown", e => {
+  if (e.key === "Enter")  submitInput();
+  if (e.key === "Escape") cancelInput();
+});
+
+/* ============================================================
+   SIDEBAR RENDERING
+============================================================ */
+function renderPrograms(filter){
+  filter = (filter || "").toLowerCase();
+  const list = document.getElementById("programs-list");
+  list.innerHTML = "";
+  PROGRAMS.forEach(group => {
+    const items = group.items.filter(p =>
+      p.name.toLowerCase().includes(filter) || p.tag.toLowerCase().includes(filter)
+    );
+    if (!items.length) return;
+    const lbl = document.createElement("div");
+    lbl.className = "section-label";
+    lbl.textContent = group.category;
+    list.appendChild(lbl);
+    items.forEach(prog => {
+      const div = document.createElement("div");
+      div.className = "slist-item";
+      div.innerHTML = `${prog.name}<span class="tag">${prog.tag}</span>`;
+      div.addEventListener("click", () => {
+        loadProgram(prog);
+        list.querySelectorAll(".slist-item").forEach(el => el.classList.remove("active"));
+        div.classList.add("active");
+        if (window.innerWidth <= 700) toggleSidebar(false);
+      });
+      list.appendChild(div);
+    });
+  });
+}
+
+function renderTopicsSidebar(){
+  const list = document.getElementById("topics-list");
+  list.innerHTML = "";
+  TOPICS.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "slist-item";
+    div.innerHTML = `<span>${t.icon}</span>${t.name}`;
+    div.addEventListener("click", () => {
+      editor.setValue(t.code);
+      setFileName(t.name.toLowerCase().replace(/ /g,"_") + ".py");
+      editor.focus();
+      if (window.innerWidth <= 700) toggleSidebar(false);
+    });
+    list.appendChild(div);
+  });
+}
+
+function renderTopicsGrid(){
+  const grid = document.getElementById("topics-grid");
+  grid.innerHTML = "";
+  TOPICS.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "topic-chip";
+    div.innerHTML = `<span>${t.icon}</span>${t.name}`;
+    div.addEventListener("click", () => {
+      editor.setValue(t.code);
+      setFileName(t.name.toLowerCase().replace(/ /g,"_") + ".py");
+      closeTopicsPopover();
+      editor.focus();
+    });
+    grid.appendChild(div);
+  });
+}
+
+function renderChallenges(){
+  const list = document.getElementById("practice-list");
+  list.innerHTML = "";
+  CHALLENGES.forEach((ch, i) => {
+    const card = document.createElement("div");
+    card.className = "challenge-card";
+    card.innerHTML = `
+      <div class="q-num">Challenge ${i+1}</div>
+      <div class="q">${ch.q}</div>
+      <div class="challenge-btns">
+        <button class="c-btn" data-hint="${i}">💡 Hint</button>
+        <button class="c-btn sol" data-sol="${i}">✅ Solution</button>
+      </div>
+      <div class="hint-box" id="hint-${i}">${ch.hint}</div>
+      <div class="sol-box" id="sol-${i}">${ch.solution}</div>
+    `;
+    card.querySelector(`[data-hint="${i}"]`).addEventListener("click", () => {
+      document.getElementById(`hint-${i}`).classList.toggle("show");
+    });
+    card.querySelector(`[data-sol="${i}"]`).addEventListener("click", () => {
+      const box = document.getElementById(`sol-${i}`);
+      box.classList.toggle("show");
+      if (box.classList.contains("show")) {
+        editor.setValue(ch.solution);
+        setFileName(`challenge_${i+1}.py`);
+        if (window.innerWidth <= 700) toggleSidebar(false);
+      }
+    });
+    list.appendChild(card);
+  });
+}
+
+/* ============================================================
+   LOAD PROGRAM INTO EDITOR
+============================================================ */
+function loadProgram(prog){
+  editor.setValue(prog.code);
+  setFileName(prog.name.toLowerCase().replace(/ /g,"_") + ".py");
+  editor.focus();
+}
+
+/* ============================================================
+   SIDEBAR TABS
+============================================================ */
+document.querySelectorAll(".stab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".stab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".sidebar-panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(`panel-${tab.dataset.tab}`).classList.add("active");
+  });
+});
+
+document.getElementById("prog-search").addEventListener("input", e => renderPrograms(e.target.value));
+
+/* ============================================================
+   TOOLBAR BUTTONS
+============================================================ */
+document.getElementById("run-btn").addEventListener("click", runCode);
+
+document.getElementById("clear-output-btn").addEventListener("click", () => {
+  clearOutput();
+  document.getElementById("output-console").innerHTML =
+    '<span class="out-sys">▸ Output cleared.</span>';
+});
+
+document.getElementById("clear-editor-btn").addEventListener("click", () => {
+  if (confirm("Clear the editor? Unsaved code will be lost.")) {
+    editor.setValue(""); editor.focus();
+  }
+});
+
+document.getElementById("copy-btn").addEventListener("click", () => {
+  navigator.clipboard.writeText(editor.getValue()).then(() => {
+    setStatus("Copied ✓");
+    setTimeout(() => setStatus("🚀 Python Lab – Class 10"), 1800);
+  });
+});
+
+document.getElementById("download-btn").addEventListener("click", () => {
+  const blob = new Blob([editor.getValue()], { type:"text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = currentFile;
+  a.click();
+});
+
+document.getElementById("upload-btn").addEventListener("click", () =>
+  document.getElementById("file-upload").click()
+);
+
+document.getElementById("file-upload").addEventListener("change", e => {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { editor.setValue(ev.target.result); setFileName(file.name); editor.focus(); };
+  reader.readAsText(file);
+  e.target.value = "";
+});
+
+document.getElementById("fullscreen-btn").addEventListener("click", toggleFullscreen);
+
+document.getElementById("sidebar-toggle-btn").addEventListener("click", () =>
+  toggleSidebar(!isSidebarOpen)
+);
+
+function toggleSidebar(open){
+  isSidebarOpen = open;
+  document.getElementById("sidebar").classList.toggle("collapsed", !open);
+}
+
+function toggleFullscreen(){
+  isFullscreen = !isFullscreen;
+  document.getElementById("editor-pane").classList.toggle("fullscreen", isFullscreen);
+  editor.refresh();
+}
+
+/* ============================================================
+   THEME
+============================================================ */
+document.getElementById("theme-btn").addEventListener("click", () => {
+  isDark = !isDark;
+  document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+  editor.setOption("theme", isDark ? "dracula" : "eclipse");
+  document.getElementById("theme-label").textContent = isDark ? "Light" : "Dark";
+  localStorage.setItem("pylab_theme", isDark ? "dark" : "light");
+});
+
+function applyTheme(){
+  const saved = localStorage.getItem("pylab_theme");
+  if (saved === "light"){
+    isDark = false;
+    document.documentElement.setAttribute("data-theme","light");
+  }
+}
+
+/* ============================================================
+   TOPICS POPOVER
+============================================================ */
+document.getElementById("topics-btn").addEventListener("click", () =>
+  document.getElementById("topics-popover").classList.add("show")
+);
+document.getElementById("topics-close").addEventListener("click", closeTopicsPopover);
+document.getElementById("topics-popover").addEventListener("click", e => {
+  if (e.target === document.getElementById("topics-popover")) closeTopicsPopover();
+});
+function closeTopicsPopover(){
+  document.getElementById("topics-popover").classList.remove("show");
+}
+
+/* ============================================================
+   FILE NAME BADGE
+============================================================ */
+document.getElementById("file-name-badge").addEventListener("click", () => {
+  const n = prompt("Rename file:", currentFile);
+  if (n) setFileName(n.endsWith(".py") ? n : n + ".py");
+});
+function setFileName(name){
+  currentFile = name;
+  document.getElementById("file-name-badge").textContent = name;
+  localStorage.setItem("pylab_filename", name);
+}
+
+/* ============================================================
+   STATUS BAR
+============================================================ */
+function updateStatusBar(){
+  const cur = editor.getCursor();
+  document.getElementById("sb-line").textContent = `Ln ${cur.line+1}, Col ${cur.ch+1}`;
+  const sel = editor.getSelection();
+  document.getElementById("sb-sel").textContent = sel.length ? `[${sel.length} sel]` : "";
+}
+function setStatus(msg){ document.getElementById("status-msg").textContent = msg; }
+
+/* ============================================================
+   SAVE (keyboard shortcut)
+============================================================ */
+function saveCode(){
+  localStorage.setItem("pylab_code", editor.getValue());
+  setStatus("Saved ✓");
+  setTimeout(() => setStatus("🚀 Python Lab – Class 10"), 1800);
+}
+
+/* ============================================================
+   GLOBAL KEYBOARD SHORTCUTS
+============================================================ */
+document.addEventListener("keydown", e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==="Enter"){ e.preventDefault(); runCode(); }
+  if ((e.ctrlKey||e.metaKey) && e.key==="s")    { e.preventDefault(); saveCode(); }
+  if (e.key==="F11"){ e.preventDefault(); toggleFullscreen(); }
+  if (e.key==="Escape" && isFullscreen){
+    isFullscreen = false;
+    document.getElementById("editor-pane").classList.remove("fullscreen");
+    editor.refresh();
+  }
+});
+
+/* ============================================================
+   BOOT
+============================================================ */
+(async function boot(){
+  applyTheme();
+
+  // Animate loader while Pyodide loads
+  const steps = [[0,"Starting…"],[10,"Fetching Pyodide…"],[40,"Loading Python runtime…"],
+                 [70,"Initializing…"],[88,"Patching I/O…"]];
+  steps.forEach(([p,m]) => setTimeout(() => setLoader(p,m), p * 25));
+
+  initEditor();
+  renderPrograms();
+  renderTopicsSidebar();
+  renderTopicsGrid();
+  renderChallenges();
+
+  try {
+    await initPyodide();
+  } catch(err){
+    document.getElementById("loading-screen").innerHTML = `
+      <div class="loader-logo"><span>Py</span>Lab</div>
+      <div style="color:var(--error);font-size:.88rem;text-align:center;max-width:320px;line-height:1.6;">
+        ⚠️ Failed to load Python runtime.<br>
+        Please check your internet connection and try again.
+      </div>
+      <button onclick="location.reload()" style="margin-top:14px;padding:9px 22px;border-radius:8px;
+        border:none;background:var(--accent);color:#fff;font-size:.9rem;cursor:pointer;font-weight:600;">
+        🔄 Retry
+      </button>`;
+  }
+})();
+</script>
+</body>
+</html>
